@@ -1,12 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Dental Clinic Check-In</title>
 
     <style>
+
         body {
             font-family: Arial, sans-serif;
             background: #f5f7fa;
@@ -36,10 +40,21 @@
             line-height: 1.5;
         }
 
+        input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 14px;
+            margin-top: 15px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            font-size: 18px;
+            text-align: center;
+        }
+
         button {
             width: 100%;
             padding: 16px;
-            margin-top: 20px;
+            margin-top: 15px;
             border: none;
             border-radius: 10px;
             background: #111;
@@ -51,37 +66,76 @@
 
         button:disabled {
             background: #999;
-            cursor: not-allowed;
+        }
+
+        #confirmation {
+            display: none;
         }
 
         #status {
             margin-top: 20px;
             font-weight: bold;
         }
+
     </style>
+
 </head>
 
 <body>
 
 <div class="card">
 
-    <h1>Dental Clinic Check-In</h1>
+    <!-- PIN SCREEN -->
 
-    <p id="message">
-        Confirm that you are the clinic receptionist before checking in this patient.
-    </p>
+    <div id="pinScreen">
 
-    <button id="checkInButton">
-        Confirm Check-In
-    </button>
+        <h1>Receptionist Verification</h1>
 
-    <p id="status"></p>
+        <p>
+            Enter the receptionist PIN to continue.
+        </p>
+
+        <input
+            id="pinInput"
+            type="password"
+            inputmode="numeric"
+            placeholder="Enter PIN"
+        >
+
+        <button id="verifyButton">
+            Verify
+        </button>
+
+        <p id="pinStatus"></p>
+
+    </div>
+
+
+    <!-- CONFIRMATION SCREEN -->
+
+    <div id="confirmation">
+
+        <h1>Patient Check-In</h1>
+
+        <p>
+            Confirm that this patient has arrived at the clinic.
+        </p>
+
+        <button id="checkInButton">
+            Confirm Check-In
+        </button>
+
+        <p id="status"></p>
+
+    </div>
 
 </div>
+
 
 <script>
 
     // Get token from URL
+
     const pathParts = window.location.pathname.split('/');
 
     const token =
@@ -89,32 +143,73 @@
             ? pathParts[2]
             : null;
 
-    const button = document.getElementById('checkInButton');
-    const status = document.getElementById('status');
-    const message = document.getElementById('message');
+
+    const pinInput =
+        document.getElementById('pinInput');
+
+    const verifyButton =
+        document.getElementById('verifyButton');
+
+    const pinStatus =
+        document.getElementById('pinStatus');
+
+    const pinScreen =
+        document.getElementById('pinScreen');
+
+    const confirmation =
+        document.getElementById('confirmation');
+
+    const checkInButton =
+        document.getElementById('checkInButton');
+
+    const status =
+        document.getElementById('status');
 
 
     // No token
+
     if (!token) {
 
-        button.style.display = 'none';
-
-        message.textContent =
-            'No valid check-in token found.';
+        pinScreen.innerHTML =
+            '<h1>Invalid Check-In</h1>' +
+            '<p>No valid check-in token was found.</p>';
 
     }
 
 
-    // Button clicked
-    button.addEventListener('click', async () => {
+    // Verify receptionist PIN
 
-        if (!token) return;
+    verifyButton.addEventListener('click', () => {
 
-        button.disabled = true;
+        const pin = pinInput.value;
 
-        button.textContent = 'Checking in...';
 
-        status.textContent = '';
+        if (pin === '1234') {
+
+            pinScreen.style.display = 'none';
+
+            confirmation.style.display = 'block';
+
+        } else {
+
+            pinStatus.textContent =
+                'Incorrect PIN.';
+
+            pinInput.value = '';
+
+        }
+
+    });
+
+
+    // Check in patient
+
+    checkInButton.addEventListener('click', async () => {
+
+        checkInButton.disabled = true;
+
+        checkInButton.textContent =
+            'Checking in...';
 
 
         try {
@@ -135,41 +230,37 @@
             );
 
 
-            const data = await response.json();
-
-
-            console.log('n8n response:', data);
+            const data =
+                await response.json();
 
 
             if (data.success) {
 
-                message.textContent =
-                    'Patient successfully checked in.';
-
-                button.style.display = 'none';
-
-                status.textContent =
-                    '✓ Check-in successful!';
+                confirmation.innerHTML =
+                    '<h1>✓ Check-In Successful</h1>' +
+                    '<p>The patient has been checked in.</p>';
 
             } else {
 
-                button.disabled = false;
+                checkInButton.disabled = false;
 
-                button.textContent =
+                checkInButton.textContent =
                     'Confirm Check-In';
 
                 status.textContent =
-                    data.message || 'Check-in failed.';
+                    data.message ||
+                    'Check-in failed.';
 
             }
+
 
         } catch (error) {
 
             console.error(error);
 
-            button.disabled = false;
+            checkInButton.disabled = false;
 
-            button.textContent =
+            checkInButton.textContent =
                 'Confirm Check-In';
 
             status.textContent =
@@ -182,4 +273,5 @@
 </script>
 
 </body>
+
 </html>
