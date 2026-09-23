@@ -19,12 +19,50 @@
             ? pathParts[2]
             : null;
 
-        if (token) {
-            document.getElementById('status').textContent =
-                `Token received: ${token}`;
+        const status = document.getElementById('status');
+
+        if (!token) {
+
+            status.textContent = 'No check-in token found.';
+
         } else {
-            document.getElementById('status').textContent =
-                'No check-in token found.';
+
+            status.textContent = 'Checking in...';
+
+            fetch('https://laborer-recess-zippy.ngrok-free.dev/webhook-test/patient-checkin', {
+                method: 'POST',
+
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+
+                body: JSON.stringify({
+                    check_in_token: token
+                })
+            })
+
+            .then(response => response.json())
+
+            .then(data => {
+
+                console.log(data);
+
+                if (data.success) {
+                    status.textContent = '✓ Check-in successful!';
+                } else {
+                    status.textContent = 'Check-in failed.';
+                }
+
+            })
+
+            .catch(error => {
+
+                console.error(error);
+
+                status.textContent =
+                    'Unable to connect to clinic system.';
+
+            });
         }
     </script>
 
