@@ -1,70 +1,185 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dental Check-In</title>
+
+    <title>Dental Clinic Check-In</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f7fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .card {
+            background: white;
+            width: 90%;
+            max-width: 420px;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+        }
+
+        p {
+            color: #555;
+            line-height: 1.5;
+        }
+
+        button {
+            width: 100%;
+            padding: 16px;
+            margin-top: 20px;
+            border: none;
+            border-radius: 10px;
+            background: #111;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            background: #999;
+            cursor: not-allowed;
+        }
+
+        #status {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+    </style>
 </head>
 
 <body>
 
+<div class="card">
+
     <h1>Dental Clinic Check-In</h1>
 
-    <p id="status">Reading QR code...</p>
+    <p id="message">
+        Confirm that you are the clinic receptionist before checking in this patient.
+    </p>
 
-    <script>
-        const pathParts = window.location.pathname.split('/');
+    <button id="checkInButton">
+        Confirm Check-In
+    </button>
 
-        const token = pathParts[1] === 'c'
+    <p id="status"></p>
+
+</div>
+
+<script>
+
+    // Get token from URL
+    const pathParts = window.location.pathname.split('/');
+
+    const token =
+        pathParts[1] === 'c'
             ? pathParts[2]
             : null;
 
-        const status = document.getElementById('status');
+    const button = document.getElementById('checkInButton');
+    const status = document.getElementById('status');
+    const message = document.getElementById('message');
 
-        if (!token) {
 
-            status.textContent = 'No check-in token found.';
+    // No token
+    if (!token) {
 
-        } else {
+        button.style.display = 'none';
 
-            status.textContent = 'Checking in...';
+        message.textContent =
+            'No valid check-in token found.';
 
-            fetch('https://laborer-recess-zippy.ngrok-free.dev/webhook-test/patient-checkin', {
-                method: 'POST',
+    }
 
-                headers: {
-                    'Content-Type': 'application/json'
-                },
 
-                body: JSON.stringify({
-                    check_in_token: token
-                })
-            })
+    // Button clicked
+    button.addEventListener('click', async () => {
 
-            .then(response => response.json())
+        if (!token) return;
 
-            .then(data => {
+        button.disabled = true;
 
-                console.log(data);
+        button.textContent = 'Checking in...';
 
-                if (data.success) {
-                    status.textContent = '✓ Check-in successful!';
-                } else {
-                    status.textContent = 'Check-in failed.';
+        status.textContent = '';
+
+
+        try {
+
+            const response = await fetch(
+                'https://laborer-recess-zippy.ngrok-free.dev/webhook-test/patient-checkin',
+                {
+                    method: 'POST',
+
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+
+                    body: JSON.stringify({
+                        check_in_token: token
+                    })
                 }
+            );
 
-            })
 
-            .catch(error => {
+            const data = await response.json();
 
-                console.error(error);
+
+            console.log('n8n response:', data);
+
+
+            if (data.success) {
+
+                message.textContent =
+                    'Patient successfully checked in.';
+
+                button.style.display = 'none';
 
                 status.textContent =
-                    'Unable to connect to clinic system.';
+                    '✓ Check-in successful!';
 
-            });
+            } else {
+
+                button.disabled = false;
+
+                button.textContent =
+                    'Confirm Check-In';
+
+                status.textContent =
+                    data.message || 'Check-in failed.';
+
+            }
+
+        } catch (error) {
+
+            console.error(error);
+
+            button.disabled = false;
+
+            button.textContent =
+                'Confirm Check-In';
+
+            status.textContent =
+                'Unable to connect to the clinic system.';
+
         }
-    </script>
+
+    });
+
+</script>
 
 </body>
 </html>
