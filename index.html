@@ -1,10 +1,32 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dental Check-In</title>
 </head>
+
 <body>
+
     <h1>Dental Clinic Check-In</h1>
-    <p>QR system is working.</p>
+
+    <p id="status">Reading QR code...</p>
+
+    <script>
+        const pathParts = window.location.pathname.split('/');
+
+        const token = pathParts[1] === 'c'
+            ? pathParts[2]
+            : null;
+
+        if (token) {
+            document.getElementById('status').textContent =
+                `Token received: ${token}`;
+        } else {
+            document.getElementById('status').textContent =
+                'No check-in token found.';
+        }
+    </script>
+
 </body>
 </html>
